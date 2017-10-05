@@ -416,13 +416,11 @@ class DiagramCtrl extends MetricsPanelCtrl {
           //debugger;
           var aMetric = aComposite.metrics[j];
           var seriesName = aMetric.seriesName;
-          currentWorstSeriesName = aMetric.seriesName;
           var seriesItem = data[seriesName];
           // check colorData thresholds
-          if (currentWorstSeries === null) {
+          if (this.isSeriesWorse(currentWorstSeries, seriesItem)) {
             currentWorstSeries = seriesItem;
-          } else {
-            currentWorstSeries = this.getWorstSeries(currentWorstSeries, seriesItem);
+            currentWorstSeriesName = aMetric.seriesName;
           }
         }
         // Prefix the valueFormatted with the actual metric name
@@ -434,18 +432,36 @@ class DiagramCtrl extends MetricsPanelCtrl {
       }
 	} // End setValues()
 
-  getWorstSeries(series1, series2) {
-    var worstSeries = series1;
-    var series1thresholdLevel = this.getThesholdLevel(series1);
-    var series2thresholdLevel = this.getThesholdLevel(series2);
-    console.log("Series1 threhold level: " + series1thresholdLevel);
-    console.log("Series2 threhold level: " + series2thresholdLevel);
-    if (series2thresholdLevel > series1thresholdLevel) {
-      // series2 has higher threshold violation
-      worstSeries = series2;
-    }
-    return worstSeries;
-  }
+	isSeriesWorse(series1, series2) {
+	  if (series1 == undefined) {
+		  return true;
+	  }
+	  if (series2 == undefined) {
+	  	return false;
+		}
+
+		var series1thresholdLevel = this.getThresholdLevel(series1);
+		var series2thresholdLevel = this.getThresholdLevel(series2);
+		console.log("threshold level: series1=" + series1thresholdLevel + ", series2=" + series2thresholdLevel);
+		return series1thresholdLevel == undefined || series2thresholdLevel > series1thresholdLevel;
+	}
+
+  getThresholdLevel(series) {
+		var value = series.value;
+		var thresholds = series.colorData.thresholds;
+		// ok if no thresholds are defined
+  		if (thresholds === undefined) {
+  		return 0;
+  	}
+		// check thresholds in reverse order
+ 		for (var i = thresholds.length; i > 0; i--) {
+ 			if (value >= thresholds[i - 1]) {
+ 				return i;
+			}
+		}
+		// defaults to ok
+		return 0;
+	}
 
   // returns level of threshold, 0 = ok, 1 = warnimg, 2 = critical
   getThesholdLevel(series) {
