@@ -250,6 +250,8 @@ class DiagramCtrl extends MetricsPanelCtrl {
         };
         // if parsing the graph definition fails, the error handler will be called but the renderCallback() may also still be called.
         mermaidAPI.render(this.panel.graphId, graphDefinition, renderCallback);
+			  this.svgData = data;
+		    this.render();
       }
 
 			if(mode == 'url') {

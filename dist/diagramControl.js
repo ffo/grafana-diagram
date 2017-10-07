@@ -349,6 +349,8 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
 								};
 								// if parsing the graph definition fails, the error handler will be called but the renderCallback() may also still be called.
 								mermaidAPI.render(this.panel.graphId, graphDefinition, renderCallback);
+								this.svgData = data;
+								this.render();
 							};
 
 							this.clearDiagram();
