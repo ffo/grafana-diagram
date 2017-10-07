@@ -34,8 +34,11 @@ const panelDefaults = {
 	valueName: 'avg',
 	valueOptions: ['avg', 'min', 'max', 'total', 'current'],
     valueMaps: [
-      { value: 'null', op: '=', text: 'N/A' }
     ],
+	mappingTypes: [
+		{name: 'value to text', value: 1},
+		{name: 'range to text', value: 2},
+	],
     content: 'graph LR\n' +
 		'A[Square Rect] -- Link text --> B((Circle))\n' +
 		'A --> C(Round Rect)\n' +
@@ -133,6 +136,7 @@ class DiagramCtrl extends MetricsPanelCtrl {
 		this.addEditorTab('Diagram', diagramEditor, 2);
 		this.addEditorTab('Display', displayEditor, 3);
     this.addEditorTab('Metric Composites', compositeEditor, 4);
+    this.addEditorTab('Value Mappings', mappingEditor, 5);
 	}
 
 	getDiagramContainer(){
@@ -194,6 +198,39 @@ class DiagramCtrl extends MetricsPanelCtrl {
   removeMetricFromComposite(composite, metric) {
     composite.metrics = _.without(composite.metrics, metric);
   }
+
+	addValueMapping(mapping) {
+		this.panel.valueMaps.push(mapping || {});
+	}
+
+	removeValueMapping(mapping) {
+		this.panel.valueMaps = _.without(this.panel.valueMaps, mapping);
+	}
+	
+	addEntryToValueMapping(mapping) {
+		if (mapping.type == 1) {
+			if (mapping.valueToText === undefined) {
+				mapping.valueToText = [{}];
+			} else {
+				mapping.valueToText.push({});
+			}
+		} else if (mapping.type == 2) {
+			if (mapping.rangeToText === undefined) {
+				mapping.rangeToText = [{}];
+			} else {
+				mapping.rangeToText.push({});
+			}
+		}
+	}
+
+	removeEntryFromValueMapping(valueMap, mapping) {
+		if (valueMap.type == 1) {
+			valueMap.valueToText = _.without(valueMap.valueToText, mapping);
+		} else if (valueMap.type == 2) {
+			valueMap.rangeToText = _.without(valueMap.rangeToText, mapping);
+		}
+	}
+
 
 	updateThresholds(){
 		var thresholdCount = this.panel.thresholds.length;
@@ -409,30 +446,46 @@ class DiagramCtrl extends MetricsPanelCtrl {
 				}
 			}
 	    }
+
+			// Map values to text
+			this.applyValueMapping(data);
+
       // now add the composites to data
       for (var i = 0; i < this.panel.composites.length; i++) {
         var aComposite = this.panel.composites[i];
-        var currentWorstSeries = null;
-        var currentWorstSeriesName = null;
-        for (var j = 0; j < aComposite.metrics.length; j++) {
-          //debugger;
-          var aMetric = aComposite.metrics[j];
-          var seriesName = aMetric.seriesName;
-          var seriesItem = data[seriesName];
-          // check colorData thresholds
-          if (this.isSeriesWorse(currentWorstSeries, seriesItem)) {
-            currentWorstSeries = seriesItem;
-            currentWorstSeriesName = aMetric.seriesName;
-          }
-        }
-        // Prefix the valueFormatted with the actual metric name
-        currentWorstSeries.valueFormattedWithPrefix = currentWorstSeriesName + ': ' + currentWorstSeries.valueFormatted;
-        currentWorstSeries.valueRawFormattedWithPrefix = currentWorstSeriesName + ': ' + currentWorstSeries.value;
-        currentWorstSeries.valueFormatted = currentWorstSeriesName + ': ' + currentWorstSeries.valueFormatted;
-        // now push the composite into data
-        data[aComposite.name] = currentWorstSeries;
+   			var worstMetric = this.getWorstMetric(aComposite, data);
+	  		var worstSeries = data[worstMetric.seriesName];
+	  		var worstDisplayName = worstMetric.displayName;
+	  		if (worstDisplayName == undefined) {
+	  			worstDisplayName = worstMetric.seriesName;
+	  		}
+			
+	  		console.info("composite '" +aComposite.name +"': worstMetric=" +worstMetric.seriesName +", worstSeries:" +worstSeries);
+
+	  		if ( worstSeries != undefined) {
+	  			// Prefix the valueFormatted with the actual metric name
+	  			worstSeries.valueFormattedWithPrefix = worstDisplayName+ ': ' + worstSeries.valueFormatted;
+	  			worstSeries.valueRawFormattedWithPrefix = worstDisplayName + ': ' + worstSeries.value;
+	  			worstSeries.valueFormatted = worstDisplayName + ': ' + worstSeries.valueFormatted;
+
+	  			// now push the composite into data
+	  		 	data[aComposite.name] = worstSeries;
+	  		}
       }
 	} // End setValues()
+
+  getWorstMetric(composite, data) {
+	  var worstMetric = undefined;
+	  for(var i = 0; i < composite.metrics.length; i++) {
+		  var metric = composite.metrics[i];
+		  if (worstMetric == undefined || this.isSeriesWorse(data[worstMetric.seriesName], data[metric.seriesName])) {
+			  worstMetric = metric;
+		  }
+	  }
+ 	  console.info("getWorstMetric('" +composite.name +"'): " +worstMetric.seriesName);
+	  return worstMetric;
+  }
+
 
 	isSeriesWorse(series1, series2) {
 	  if (series1 == undefined) {
@@ -444,7 +497,6 @@ class DiagramCtrl extends MetricsPanelCtrl {
 
 		var series1thresholdLevel = this.getThresholdLevel(series1);
 		var series2thresholdLevel = this.getThresholdLevel(series2);
-		console.log("threshold level: series1=" + series1thresholdLevel + ", series2=" + series2thresholdLevel);
 		return series1thresholdLevel == undefined || series2thresholdLevel > series1thresholdLevel;
 	}
 
@@ -543,6 +595,63 @@ class DiagramCtrl extends MetricsPanelCtrl {
     seriesItem.format = overrides.unitFormat || this.panel.format;
 		return seriesItem;
 	}
+
+	applyValueMapping(data) {
+		for (let i = 0; i < this.panel.valueMaps.length; i++) {
+			var map = this.panel.valueMaps[i];
+			if (! map.hasOwnProperty('alias'))
+				continue;
+			var regex = kbn.stringToJsRegex(map.alias);
+			console.info("Checking mapping: " +map.alias);
+			for(let j = 0; j < this.series.length; j++) {
+				var matches = this.series[j].alias.match(regex);
+				console.info("  Series: " +this.series[j].alias);
+				if (matches && matches.length > 0) {
+					var seriesItem = this.series[j];
+					var dataItem = data[seriesItem.alias];
+					if (map.type == 1) {
+						for(let k = 0; k < map.valueToText.length; k++) {
+								//	
+								// Value mappings
+								//	
+								var valueMapping = map.valueToText[k];
+								console.info("    Mapping: " +dataItem.valueFormatted +" =? " +valueMapping.value);
+								if (valueMapping.value === 'null') {
+									if (dataItem.value === null || dataItem.value === void 0) {
+										dataItem.valueFormatted = valueMapping.text;
+										return;
+									}
+									continue;
+								} else if (parseFloat(valueMapping.value) == dataItem.valueRounded) {
+									dataItem.valueFormatted = valueMapping.text;
+									console.info("Map value of series " +seriesItem.alias +": " +dataItem.valueRounded +" -> " +valueMapping.text);
+									continue;
+								}
+						}
+					} else if (map.type == 2) {
+						for(let k = 0; k < map.rangeToTexts.length; k++) {
+								//	
+								// Range Mappings
+								//	
+								var rangeToText = map.rangeToTexts[k];
+								if (rangeToText.from === 'null' && rangeNapping.to == 'null') {
+									if (dataItem.value === null || dataItem.value === void 0) {
+										dataItem.valueFormatted = rangeToText.text;
+										return;
+									}
+									continue;
+								} else if (parseFloat(rangeToText.from) <= dataItem.valueRounded && parseFloat(rangeToText.to) >= dataItem.valueRounded) {
+									dataItem.valueFormatted = rangeToText.text;
+									console.info("Map value of series " +seriesItem.alias +": " +dataItem.valueRounded +" -> " +rangeToText.text);
+									continue;
+								}
+							}
+					}
+				}
+			}
+		}
+	}
+
 
 	invertColorOrder() {
 	    this.panel.colors.reverse();
