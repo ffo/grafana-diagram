@@ -2,7 +2,7 @@ import './libs/mermaid/dist/mermaidAPI';
 import TimeSeries from 'app/core/time_series2';
 import kbn from 'app/core/utils/kbn';
 import {MetricsPanelCtrl} from 'app/plugins/sdk';
-import {diagramEditor, displayEditor, compositeEditor} from './properties';
+import {diagramEditor, displayEditor, compositeEditor, mappingEditor} from './properties';
 import _ from 'lodash';
 import './series_overrides_diagram_ctrl';
 import './css/diagram.css!';

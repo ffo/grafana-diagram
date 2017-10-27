@@ -3,7 +3,7 @@
 System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app/core/utils/kbn', 'app/plugins/sdk', './properties', 'lodash', './series_overrides_diagram_ctrl', './css/diagram.css!'], function (_export, _context) {
 	"use strict";
 
-	var TimeSeries, kbn, MetricsPanelCtrl, diagramEditor, displayEditor, compositeEditor, _, _createClass, panelDefaults, DiagramCtrl;
+	var TimeSeries, kbn, MetricsPanelCtrl, diagramEditor, displayEditor, compositeEditor, mappingEditor, _, _createClass, panelDefaults, DiagramCtrl;
 
 	function _classCallCheck(instance, Constructor) {
 		if (!(instance instanceof Constructor)) {
@@ -66,6 +66,7 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
 			diagramEditor = _properties.diagramEditor;
 			displayEditor = _properties.displayEditor;
 			compositeEditor = _properties.compositeEditor;
+			mappingEditor = _properties.mappingEditor;
 		}, function (_lodash) {
 			_ = _lodash.default;
 		}, function (_series_overrides_diagram_ctrl) {}, function (_cssDiagramCss) {}],
