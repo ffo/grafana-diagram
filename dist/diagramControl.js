@@ -861,17 +861,22 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
 								var seriesItem = data[key];
 
 								// Find nodes by ID if we can
-								console.info('finding targetElement');
+								console.info('finding targetElement: ' + key);
 								var targetElement = d3.select(svg[0].getElementById(key)); // $(svg).find('#'+key).first(); // jquery doesnt work for some ID expressions [prometheus data]
 
 								if (targetElement[0][0] !== null) {
 									// probably a flowchart
 									targetElement.selectAll('rect,circle,polygon').style('fill', seriesItem.color);
 
+									var node = targetElement.selectAll('rect,circle,polygon');
 									var div = targetElement.select('div');
 									var fo = targetElement.select('foreignObject');
 									// make foreign object element taller to accomdate value in FireFox/IE
 									fo.attr('height', 45);
+									if (node.attr('height') < 45) {
+										node.attr('height', 45);
+									}
+
 									// Add value text
 									var p = div.append('p');
 									p.classed('diagram-value');
