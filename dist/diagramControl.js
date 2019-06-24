@@ -547,23 +547,17 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 // make sure we have a match
                 if (!data.hasOwnProperty(seriesName)) continue;
                 var seriesItem = data[seriesName];
-                // add the name of the series Item
-                seriesItem.nameOfMetric = seriesDisplayName;
                 // check colorData thresholds
-                if (currentWorstSeries === null) {
+                if (this.isSeriesWorse(currentWorstSeries, seriesItem)) {
                   currentWorstSeries = seriesItem;
-                  currentWorstSeriesName = seriesItem.nameOfMetric;
-                } else {
-                  currentWorstSeries = this.getWorstSeries(currentWorstSeries, seriesItem);
-                  currentWorstSeriesName = currentWorstSeries.nameOfMetric;
+                  currentWorstSeriesName = seriesDisplayName;
                 }
-                delete seriesItem.nameOfMetric;
               }
               // Prefix the valueFormatted with the actual metric name
               if (currentWorstSeries !== null) {
                 currentWorstSeries.valueFormattedWithPrefix = currentWorstSeriesName + ': ' + currentWorstSeries.valueFormatted;
                 currentWorstSeries.valueRawFormattedWithPrefix = currentWorstSeriesName + ': ' + currentWorstSeries.value;
-                // currentWorstSeries.valueFormatted = currentWorstSeriesName + ': ' + currentWorstSeries.valueFormatted;
+                currentWorstSeries.valueFormatted = currentWorstSeriesName + ': ' + currentWorstSeries.valueFormatted;
                 // now push the composite into data
                 data[aComposite.name] = currentWorstSeries;
               }
@@ -571,18 +565,16 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
             return data;
           }
         }, {
-          key: 'getWorstSeries',
-          value: function getWorstSeries(series1, series2) {
-            var worstSeries = series1;
-            var series1thresholdLevel = this.getThresholdLevel(series1);
-            var series2thresholdLevel = this.getThresholdLevel(series2);
-            console.debug("Series1 threshold level: " + series1thresholdLevel);
-            console.debug("Series2 threshold level: " + series2thresholdLevel);
-            if (series2thresholdLevel > series1thresholdLevel) {
-              // series2 has higher threshold violation
-              worstSeries = series2;
+          key: 'isSeriesWorse',
+          value: function isSeriesWorse(series1, series2) {
+            if (series1 == null) {
+              return true;
+            } else {
+              var series1thresholdLevel = this.getThresholdLevel(series1);
+              var series2thresholdLevel = this.getThresholdLevel(series2);
+              console.debug("threshold levels: 1=" + series1thresholdLevel + ", 2=" + series2thresholdLevel);
+              return series2thresholdLevel > series1thresholdLevel;
             }
-            return worstSeries;
           }
         }, {
           key: 'getThresholdLevel',
