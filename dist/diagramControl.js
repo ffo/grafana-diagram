@@ -574,6 +574,10 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
               for (var j = 0; j < aComposite.metrics.length; j++) {
                 var aMetric = aComposite.metrics[j];
                 var seriesName = aMetric.seriesName;
+                var seriesDisplayName = aMetric.displayName;
+                if (seriesDisplayName == null || seriesDisplayName.length == 0) {
+                  seriesDisplayName = seriesName;
+                }
                 // For testing
                 console.debug("aMetric value: " + seriesItem.valueFormatted);
                 console.debug("aMetric: " + seriesName);
@@ -583,7 +587,7 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 // check colorData thresholds
                 if (this.isSeriesWorse(currentWorstSeries, seriesItem)) {
                   currentWorstSeries = seriesItem;
-                  currentWorstSeriesName = seriesName;
+                  currentWorstSeriesName = seriesDisplayName;
                 }
               }
               // Prefix the valueFormatted with the actual metric name
@@ -856,6 +860,7 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 // Find nodes by ID if we can
                 //console.info('finding targetElement');
                 var targetElement = d3.select(svg[0].getElementById(key)); // $(svg).find('#'+key).first(); // jquery doesnt work for some ID expressions [prometheus data]
+                console.debug("Series item: " + seriesItem.valueFormated);
                 if (targetElement[0][0] !== null) {
                   // probably a flowchart
                   targetElement.selectAll('rect,circle,polygon').style('fill', seriesItem.color);
