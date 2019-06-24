@@ -536,7 +536,10 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
               var currentWorstSeriesName = null;
               for (var j = 0; j < aComposite.metrics.length; j++) {
                 var aMetric = aComposite.metrics[j];
-                var seriesName = aMetric.seriesName;
+                var seriesDisplayName = aMetric.displayName;
+                if (seriesDisplayName == null || seriesDisplayName.length() == 0) {
+                  seriesDisplayName = aMetric.seriesName;
+                }
                 // For testing
                 console.debug("aMetric value: " + seriesItem.valueFormatted);
                 console.debug("aMetric: " + seriesName);
@@ -544,7 +547,7 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 if (!data.hasOwnProperty(seriesName)) continue;
                 var seriesItem = data[seriesName];
                 // add the name of the series Item
-                seriesItem.nameOfMetric = seriesName;
+                seriesItem.nameOfMetric = seriesDisplayName;
                 // check colorData thresholds
                 if (currentWorstSeries === null) {
                   currentWorstSeries = seriesItem;
