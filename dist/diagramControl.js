@@ -543,8 +543,6 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 // make sure we have a match
                 if (!data.hasOwnProperty(seriesName)) continue;
                 var seriesItem = data[seriesName];
-                // add the name of the series Item
-                seriesItem.nameOfMetric = seriesName;
                 // check colorData thresholds
                 if (this.isSeriesWorse(currentWorstSeries, seriesItem)) {
                   currentWorstSeries = seriesItem;
