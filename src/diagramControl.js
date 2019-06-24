@@ -451,9 +451,10 @@ class DiagramCtrl extends MetricsPanelCtrl {
       var currentWorstSeriesName = null;
       for (var j = 0; j < aComposite.metrics.length; j++) {
         var aMetric = aComposite.metrics[j];
+        var seriesName = aMetric.seriesName;
         var seriesDisplayName = aMetric.displayName;
-        if (seriesDisplayName == null || seriesDisplayName.length() == 0) {
-          seriesDisplayName = aMetric.seriesName;
+        if (seriesDisplayName == null || seriesDisplayName.length == 0) {
+          seriesDisplayName = seriesName;
         }
         // For testing
         console.debug("aMetric value: " + seriesItem.valueFormatted);
