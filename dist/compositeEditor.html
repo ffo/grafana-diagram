@@ -32,11 +32,11 @@
                 <i class="fa fa-trash pointer" ng-click="ctrl.removeMetricFromComposite(composite, metric)"></i>
               </label>
             </div>
-            <label class="gf-form-label width-6">Series</label>
+            <label class="gf-form-label width">Series</label>
             <div class="gf-form">
               <select ng-options="f for f in ctrl.getSeriesNamesForComposites()" ng-model="metric.seriesName" ng-change="ctrl.refresh()"></select>
             </div>
-            <label class="gf-form-label width-6">Display Name</label>
+            <label class="gf-form-label width">Display Name</label>
             <div class="gf-form width-15">
               <input type="text" ng-model="metric.displayName" ng-blur="ctrl.render()" class="gf-form-input width-15">
             </div>
