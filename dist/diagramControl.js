@@ -35,20 +35,6 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 
-  function getColorForValue(data, value) {
-    console.debug('Getting color for value');
-    console.debug(data);
-    console.debug(value);
-    for (var i = data.thresholds.length; i > 0; i--) {
-      if (value >= data.thresholds[i - 1]) {
-        console.debug('Color[' + (i - 1) + ']: ' + data.colorMap[i]);
-        return data.colorMap[i - 1];
-        //return data.colorMap[i];
-      }
-    }
-    return _.first(data.colorMap);
-  }
-
   function getColorByXPercentage(canvas, xPercent) {
     var x = canvas.width * xPercent;
     var context = canvas.getContext("2d");
@@ -560,7 +546,7 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
                 if (this.panel.legend.gradient.enabled) {
                   data[seriesItem.alias].color = this.getGradientForValue(data[seriesItem.alias].colorData, data[seriesItem.alias].value);
                 } else {
-                  data[seriesItem.alias].color = getColorForValue(data[seriesItem.alias].colorData, data[seriesItem.alias].value);
+                  data[seriesItem.alias].color = this.getColorForValue(data[seriesItem.alias]);
                 }
               }
             }
@@ -624,18 +610,26 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
             if (thresholds === undefined) {
               return thresholdLevel;
             }
+            for (var threshold in thresholds) {
+              if (value >= thresholds[threshold]) {
+                thresholdLevel += 1;
+              } else {
+                break;
+              }
+            }
+
             // make sure thresholds is an array of size 2
-            if (thresholds.length !== 2) {
-              return thresholdLevel;
-            }
-            if (value >= thresholds[0]) {
-              // value is equal or greater than first threshold
-              thresholdLevel = 1;
-            }
-            if (value >= thresholds[1]) {
-              // value is equal or greater than second threshold
-              thresholdLevel = 2;
-            }
+            //if (thresholds.length !== 2) {
+            //  return thresholdLevel;
+            //}
+            //if (value >= thresholds[0]) {
+            //  // value is equal or greater than first threshold
+            //  thresholdLevel = 1;
+            //}
+            //if (value >= thresholds[1]) {
+            //  // value is equal or greater than second threshold
+            //  thresholdLevel = 2;
+            //}
             return thresholdLevel;
           }
         }, {
@@ -658,6 +652,29 @@ System.register(['./libs/mermaid/dist/mermaidAPI', 'app/core/time_series2', 'app
             }
 
             return getColorByXPercentage(this.canvas, xPercent);
+          }
+        }, {
+          key: 'getColorForValue',
+          value: function getColorForValue(series) {
+            console.debug('Getting color for value');
+
+            var colorMap = series.colorData.colorMap;
+            var thresholdLevel = this.getThresholdLevel(series);
+
+            if (colorMap.length >= thresholdLevel) {
+              return colorMap[thresholdLevel];
+            } else {
+              return _.last(colorMap);
+            }
+
+            //for (var i = data.thresholds.length; i > 0; i--) {
+            //  if (value >= data.thresholds[i - 1]) {
+            //    console.debug('Color['+(i-1)+']: ' + data.colorMap[i]);
+            //    return data.colorMap[i-1];
+            //    //return data.colorMap[i];
+            //  }
+            //}
+            //return _.first(data.colorMap);
           }
         }, {
           key: 'applyOverrides',
